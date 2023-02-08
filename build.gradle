@@ -11,6 +11,7 @@ loom {
 	gluedMinecraftJar()
 	noIntermediateMappings()
 	customMinecraftManifest.set("https://github.com/Turnip-Labs/bta-manifest-repo/releases/download/v${project.bta_version}/${project.bta_version}.json")
+	accessWidenerPath = file("src/main/resources/claysoldiers.accesswidener")
 }
 
 repositories {
@@ -56,7 +57,6 @@ dependencies {
 	modRuntimeOnly "objects:client:43db9b498cb67058d2e12d394e6507722e71bb45" // https://piston-data.mojang.com/v1/objects/43db9b498cb67058d2e12d394e6507722e71bb45/client.jar
 	modImplementation "babric:fabric-loader:${project.loader_version}"
 
-	// Helper library
 	modImplementation "bta-halplibe:halplibe:${project.halplibe_version}"
 
 	modImplementation "org.slf4j:slf4j-api:1.8.0-beta4"
@@ -87,3 +87,4 @@ processResources {
 		expand "version": version
 	}
 }
+

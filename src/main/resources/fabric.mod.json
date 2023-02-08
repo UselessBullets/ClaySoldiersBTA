@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "id": "examplemod",
+  "id": "claysoldiers",
   "version": "${version}",
 
-  "name": "Example Mod",
-  "description": "This mod aims to help new BTA modders.",
+  "name": "Clay Soldiers",
+  "description": "Port of Clay Soldiers to BTA!. Add clay soldiers that fight for their color.",
   "authors": [
-    "Turnip Labs"
+    "ClickNin"
   ],
   "contact": {
     "homepage": "",
@@ -18,12 +18,14 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-        "turniplabs.examplemod.ExampleMod"
+        "me.clicknin.claysoldiers.ClaySoldiers"
     ]
   },
   "mixins": [
-      "examplemod.mixins.json"
+      "claysoldiers.mixins.json"
   ],
+
+  "accessWidener" : "claysoldiers.accesswidener",
 
   "depends": {
     "fabricloader": ">=0.13.3"
