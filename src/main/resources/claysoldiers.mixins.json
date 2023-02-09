@@ -4,6 +4,7 @@
     "package": "me.clicknin.claysoldiers.mixin",
     "compatibilityLevel": "JAVA_8",
     "mixins": [
+        "MinecraftMixin"
     ],
     "client": [
     ],

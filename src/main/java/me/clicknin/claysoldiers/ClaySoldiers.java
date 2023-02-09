@@ -56,4 +56,10 @@ public class ClaySoldiers implements ModInitializer {
         LOGGER.info("This is a port of Clay Soldiers to Better than Adventure!");
         LOGGER.info("Get the original mod here: https://mcarchive.net/mods/claysoldiers?gvsn=b1.7.3");
     }
+
+    public static void updateWaveTime() {
+        if (waveTime > 0) {
+            --waveTime;
+        }
+    }
 }
