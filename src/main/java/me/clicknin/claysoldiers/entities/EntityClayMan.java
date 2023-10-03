@@ -3,8 +3,26 @@ package me.clicknin.claysoldiers.entities;
 import me.clicknin.claysoldiers.ClaySoldiers;
 import me.clicknin.claysoldiers.items.ItemClayMan;
 import net.minecraft.client.Minecraft;
-import net.minecraft.src.*;
-import net.minecraft.src.helper.DamageType;
+import net.minecraft.core.block.Block;
+import net.minecraft.core.block.entity.TileEntity;
+import net.minecraft.core.block.entity.TileEntityChest;
+import net.minecraft.core.block.material.Material;
+import net.minecraft.core.entity.Entity;
+import net.minecraft.core.entity.EntityBobber;
+import net.minecraft.core.entity.EntityItem;
+import net.minecraft.core.entity.EntityLiving;
+import net.minecraft.core.entity.animal.EntityAnimal;
+import net.minecraft.core.entity.fx.EntityDiggingFX;
+import net.minecraft.core.entity.fx.EntitySlimeFX;
+import net.minecraft.core.entity.monster.EntityMonster;
+import net.minecraft.core.entity.player.EntityPlayer;
+import net.minecraft.core.item.Item;
+import net.minecraft.core.item.ItemFood;
+import net.minecraft.core.item.ItemStack;
+import net.minecraft.core.util.helper.DamageType;
+import net.minecraft.core.util.helper.MathHelper;
+import net.minecraft.core.world.World;
+import net.minecraft.core.world.pathfinder.Path;
 
 import java.util.List;
 
@@ -44,26 +62,32 @@ public class EntityClayMan extends EntityAnimal {
         super(world);
         this.health = 20;
         this.clayTeam = 0;
-        this.yOffset = 0.0F;
-        this.stepHeight = 0.1F;
+        this.heightOffset = 0.0F;
+        this.footSize = 0.1F;
         this.moveSpeed = 0.3F;
         this.setSize(0.15F, 0.4F);
-        this.setPosition(this.posX, this.posY, this.posZ);
-        this.texture = this.clayManTexture(0);
+        this.setPos(this.x, this.y, this.z);
+        this.skinName = "penguin";
+        this.highestSkinVariant = -1;
     }
 
     public EntityClayMan(World world, double x, double y, double z, int i) {
         super(world);
         this.health = 20;
         this.clayTeam = i;
-        this.yOffset = 0.0F;
-        this.stepHeight = 0.1F;
+        this.heightOffset = 0.0F;
+        this.footSize = 0.1F;
         this.moveSpeed = 0.3F;
         this.setSize(0.15F, 0.4F);
-        this.setPosition(x, y, z);
-        this.texture = this.clayManTexture(i);
-        this.renderDistanceWeight = 5.0;
-        this.worldObj.playSoundAtEntity(this, "step.gravel", 0.8F, ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.2F + 1.0F) * 0.9F);
+        this.setPos(x, y, z);
+        this.skinName = "penguin";
+        this.highestSkinVariant = -1;
+        this.viewScale = 5.0;
+        this.world.playSoundAtEntity(this, "step.gravel", 0.8F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F) * 0.9F);
+    }
+    public String getEntityTexture() {return "/assets/penguinmod/entity/penguin/penguin2.png";}
+    public String getDefaultEntityTexture() {
+        return "/assets/penguinmod/entity/penguin/penguin2.png";
     }
 
     public String clayManTexture(int i) {
@@ -132,7 +156,7 @@ public class EntityClayMan extends EntityAnimal {
             this.moveSpeed = 0.3F + (this.entityToAttack == null && this.targetFollow == null ? 0.0F : 0.15F);
         }
 
-        if(this.handleWaterMovement()) {
+        if(this.isInWater()) {
             this.isJumping = true;
         }
 
@@ -141,10 +165,10 @@ public class EntityClayMan extends EntityAnimal {
         double a;
         if(this.foodLeft > 0 && this.health <= 15 && this.health > 0) {
             for(list = 0; list < 12; ++list) {
-                item = this.posX + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                double gottam = this.posY + 0.25D + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                a = this.posZ + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySlimeFX(this.worldObj, item, gottam, a, Item.foodPorkchopRaw));
+                item = this.x + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                double gottam = this.y + 0.25D + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                a = this.z + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                Minecraft.getMinecraft(this).effectRenderer.addEffect(new EntitySlimeFX(this.world, item, gottam, a, Item.foodPorkchopRaw));
             }
 
             this.health += 15;
@@ -166,19 +190,19 @@ public class EntityClayMan extends EntityAnimal {
         int i13;
         int i17;
         if(this.gooTime > 0) {
-            this.motionX = 0.0D;
-            this.motionY = 0.0D;
-            this.motionZ = 0.0D;
+            this.xd = 0.0D;
+            this.yd = 0.0D;
+            this.zd = 0.0D;
             this.moveForward = 0.0F;
             this.moveStrafing = 0.0F;
             this.isJumping = false;
             this.moveSpeed = 0.0F;
             --this.gooTime;
-            list = MathHelper.floor_double(this.posX);
-            i13 = MathHelper.floor_double(this.boundingBox.minY - 1.0D);
-            int stack = MathHelper.floor_double(this.posZ);
-            i17 = this.worldObj.getBlockId(list, i13, stack);
-            if(i13 > 0 && i13 < 128 && (i17 == 0 || Block.blocksList[i17].getCollisionBoundingBoxFromPool(this.worldObj, list, i13, stack) == null)) {
+            list = MathHelper.floor_double(this.x);
+            i13 = MathHelper.floor_double(this.bb.minY - 1.0D);
+            int stack = MathHelper.floor_double(this.z);
+            i17 = this.world.getBlockId(list, i13, stack);
+            if(i13 > 0 && i13 < 128 && (i17 == 0 || Block.blocksList[i17].getCollisionBoundingBoxFromPool(this.world, list, i13, stack) == null)) {
                 this.gooTime = 0;
             }
         }
@@ -188,30 +212,30 @@ public class EntityClayMan extends EntityAnimal {
         }
 
         ++this.entCount;
-        if(this.entityToAttack != null && this.entityToAttack.isDead) {
+        if(this.entityToAttack != null && !this.entityToAttack.isAlive()) {
             this.entityToAttack = null;
-            this.setPathToEntity((PathEntity)null);
-        } else if(this.entityToAttack != null && this.rand.nextInt(25) == 0 && ((double)this.getDistanceToEntity(this.entityToAttack) > 8.0D || !this.canEntityBeSeen(this.entityToAttack))) {
+            this.setPathToEntity(null);
+        } else if(this.entityToAttack != null && this.random.nextInt(25) == 0 && ((double)this.distanceTo(this.entityToAttack) > 8.0D || !this.canEntityBeSeen(this.entityToAttack))) {
             this.entityToAttack = null;
-            this.setPathToEntity((PathEntity)null);
+            this.setPathToEntity(null);
         }
 
-        if(this.targetFollow != null && this.targetFollow.isDead) {
+        if(this.targetFollow != null && this.targetFollow.isAlive()) {
             this.targetFollow = null;
-            this.setPathToEntity((PathEntity)null);
-        } else if(this.targetFollow != null && this.rand.nextInt(25) == 0 && ((double)this.getDistanceToEntity(this.targetFollow) > 8.0D || !this.canEntityBeSeen(this.targetFollow))) {
+            this.setPathToEntity(null);
+        } else if(this.targetFollow != null && this.random.nextInt(25) == 0 && ((double)this.distanceTo(this.targetFollow) > 8.0D || !this.canEntityBeSeen(this.targetFollow))) {
             this.targetFollow = null;
-            this.setPathToEntity((PathEntity)null);
+            this.setPathToEntity(null);
         }
 
-        if(this.smokeTime <= 0 && this.entCount > 2 + this.rand.nextInt(2) && this.health > 0) {
+        if(this.smokeTime <= 0 && this.entCount > 2 + this.random.nextInt(2) && this.health > 0) {
             this.entCount = 0;
-            List list12 = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, this.boundingBox.expand(8.0D, 5.0D, 8.0D));
+            List list12 = this.world.getEntitiesWithinAABBExcludingEntity(this, this.bb.expand(8.0D, 5.0D, 8.0D));
 
             EntityClayMan entityClayMan21;
             for(i13 = 0; i13 < list12.size(); ++i13) {
                 Entity entity14 = (Entity)list12.get(i13);
-                if(entity14 instanceof EntityClayMan && this.rand.nextInt(3) == 0 && this.canEntityBeSeen(entity14)) {
+                if(entity14 instanceof EntityClayMan && this.random.nextInt(3) == 0 && this.canEntityBeSeen(entity14)) {
                     EntityClayMan entityClayMan20 = (EntityClayMan)entity14;
                     if(entityClayMan20.health > 0 && entityClayMan20.clayTeam != this.clayTeam && this.clayTeam > 0 && this.logs <= 0) {
                         if(entityClayMan20.king) {
@@ -229,23 +253,23 @@ public class EntityClayMan extends EntityAnimal {
                             this.entityToAttack = entityClayMan20;
                             break;
                         }
-                    } else if(entityClayMan20.health > 0 && this.targetFollow == null && this.entityToAttack == null && entityClayMan20.king && entityClayMan20.clayTeam == this.clayTeam && (double)this.getDistanceToEntity(entityClayMan20) > 3.0D) {
+                    } else if(entityClayMan20.health > 0 && this.targetFollow == null && this.entityToAttack == null && entityClayMan20.king && entityClayMan20.clayTeam == this.clayTeam && (double)this.distanceTo(entityClayMan20) > 3.0D) {
                         this.targetFollow = entityClayMan20;
                         break;
                     }
-                } else if(this.entityToAttack == null && entity14 instanceof EntityMob && this.canEntityBeSeen(entity14)) {
-                    EntityMob entityMob19 = (EntityMob)entity14;
-                    if(entityMob19.entityToAttack != null) {
+                } else if(this.entityToAttack == null && entity14 instanceof EntityMonster && this.canEntityBeSeen(entity14)) {
+                    EntityMonster entityMob19 = (EntityMonster)entity14;
+                    if(entityMob19.getTarget() != null) {
                         this.entityToAttack = entityMob19;
                         break;
                     }
                 } else {
-                    if(this.entityToAttack == null && this.targetFollow == null && !this.heavyCore && this.logs <= 0 && this.ridingEntity == null && entity14 instanceof EntityDirtHorse && entity14.riddenByEntity == null && this.canEntityBeSeen(entity14)) {
+                    if(this.entityToAttack == null && this.targetFollow == null && !this.heavyCore && this.logs <= 0 && this.passenger == null && entity14 instanceof EntityDirtHorse && !entity14.isPassenger() && this.canEntityBeSeen(entity14)) {
                         this.targetFollow = entity14;
                         break;
                     }
 
-                    if(this.entityToAttack == null && this.targetFollow == null && entity14 instanceof EntityFish && this.canEntityBeSeen(entity14)) {
+                    if(this.entityToAttack == null && this.targetFollow == null && entity14 instanceof EntityBobber && this.canEntityBeSeen(entity14)) {
                         this.targetFollow = entity14;
                         break;
                     }
@@ -255,29 +279,29 @@ public class EntityClayMan extends EntityAnimal {
                         if(entityItem18.item != null) {
                             ItemStack ec = entityItem18.item;
                             if(ec.stackSize > 0) {
-                                if(this.weaponPoints <= 0 && ec.itemID == Item.stick.itemID) {
+                                if(this.weaponPoints <= 0 && ec.itemID == Item.stick.id) {
                                     this.targetFollow = entityItem18;
                                     break;
                                 }
 
-                                if(this.armorPoints <= 0 && ec.itemID == Item.leather.itemID) {
+                                if(this.armorPoints <= 0 && ec.itemID == Item.leather.id) {
                                     this.targetFollow = entityItem18;
                                     break;
                                 }
 
-                                if(this.rocks <= 0 && ec.itemID == Block.gravel.blockID) {
+                                if(this.rocks <= 0 && ec.itemID == Block.gravel.id) {
                                     this.targetFollow = entityItem18;
                                     break;
                                 }
 
-                                if(!this.glowing && ec.itemID == Item.dustGlowstone.itemID) {
+                                if(!this.glowing && ec.itemID == Item.dustGlowstone.id) {
                                     this.targetFollow = entityItem18;
                                     break;
                                 }
 
-                                if(!this.king && ec.itemID == Item.ingotGold.itemID) {
+                                if(!this.king && ec.itemID == Item.ingotGold.id) {
                                     boolean z29 = false;
-                                    List b = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, this.boundingBox.expand(24.0D, 16.0D, 24.0D));
+                                    List b = this.world.getEntitiesWithinAABBExcludingEntity(this, this.bb.expand(24.0D, 16.0D, 24.0D));
 
                                     for(int b1 = 0; b1 < b.size(); ++b1) {
                                         Entity c = (Entity)b.get(b1);
@@ -295,12 +319,12 @@ public class EntityClayMan extends EntityAnimal {
                                         break;
                                     }
                                 } else {
-                                    if(!this.gunPowdered && ec.itemID == Item.sulphur.itemID) {
+                                    if(!this.gunPowdered && ec.itemID == Item.sulphur.id) {
                                         this.targetFollow = entityItem18;
                                         break;
                                     }
 
-                                    if(this.sugarTime <= 0 && ec.itemID == Item.dustSugar.itemID) {
+                                    if(this.sugarTime <= 0 && ec.itemID == Item.dustSugar.id) {
                                         this.targetFollow = entityItem18;
                                         break;
                                     }
@@ -310,32 +334,32 @@ public class EntityClayMan extends EntityAnimal {
                                         break;
                                     }
 
-                                    if(this.resPoints <= 0 && ec.itemID == Item.clay.itemID) {
+                                    if(this.resPoints <= 0 && ec.itemID == Item.clay.id) {
                                         this.targetFollow = entityItem18;
                                         break;
                                     }
 
-                                    if(this.gooStock <= 0 && ec.itemID == Item.slimeball.itemID) {
+                                    if(this.gooStock <= 0 && ec.itemID == Item.slimeball.id) {
                                         this.targetFollow = entityItem18;
                                         break;
                                     }
 
-                                    if(this.smokeStock <= 0 && ec.itemID == Item.dustRedstone.itemID) {
+                                    if(this.smokeStock <= 0 && ec.itemID == Item.dustRedstone.id) {
                                         this.targetFollow = entityItem18;
                                         break;
                                     }
 
-                                    if(this.weaponPoints > 0 && !this.stickSharp && ec.itemID == Item.flint.itemID) {
+                                    if(this.weaponPoints > 0 && !this.stickSharp && ec.itemID == Item.flint.id) {
                                         this.targetFollow = entityItem18;
                                         break;
                                     }
 
-                                    if(this.armorPoints > 0 && !this.armorPadded && ec.itemID == Block.wool.blockID) {
+                                    if(this.armorPoints > 0 && !this.armorPadded && ec.itemID == Block.wool.id) {
                                         this.targetFollow = entityItem18;
                                         break;
                                     }
 
-                                    if(!this.heavyCore && this.ridingEntity == null && ec.itemID == Item.ingotIron.itemID) {
+                                    if(!this.heavyCore && !this.isPassenger() && ec.itemID == Item.ingotIron.id) {
                                         this.targetFollow = entityItem18;
                                         break;
                                     }
@@ -347,12 +371,12 @@ public class EntityClayMan extends EntityAnimal {
                                             break;
                                         }
                                     } else {
-                                        if(ec.itemID == Item.dye.itemID && ec.getMetadata() == this.teamDye(this.clayTeam)) {
+                                        if(ec.itemID == Item.dye.id && ec.getMetadata() == this.teamDye(this.clayTeam)) {
                                             this.targetFollow = entityItem18;
                                             break;
                                         }
 
-                                        if(ec.itemID == Block.planksOak.blockID && this.ridingEntity == null || ec.itemID == Block.planksOakPainted.blockID && this.ridingEntity == null) {
+                                        if(ec.itemID == Block.planksOak.id && !this.isPassenger() || ec.itemID == Block.planksOakPainted.id && !this.isPassenger()) {
                                             byte b25 = 0;
                                             if(this.logs < 20 && ec.stackSize >= 5) {
                                                 b25 = 1;
@@ -372,13 +396,13 @@ public class EntityClayMan extends EntityAnimal {
             }
 
             if(this.entityToAttack != null) {
-                if(this.strikeTime <= 0 && this.canEntityBeSeen(this.entityToAttack) && (double)this.getDistanceToEntity(this.entityToAttack) < (this.weaponPoints > 0 ? 1.0D : 0.7D) + (double)this.rand.nextFloat() * 0.1D) {
+                if(this.strikeTime <= 0 && this.canEntityBeSeen(this.entityToAttack) && (double)this.distanceTo(this.entityToAttack) < (this.weaponPoints > 0 ? 1.0D : 0.7D) + (double)this.random.nextFloat() * 0.1D) {
                     if(this.hitTargetMakesDead(this.entityToAttack)) {
                         this.entityToAttack = null;
-                        this.setPathToEntity((PathEntity)null);
+                        this.setPathToEntity(null);
                     }
                 } else if(this.rocks > 0 && this.throwTime <= 0 && this.canEntityBeSeen(this.entityToAttack)) {
-                    item = (double)this.getDistanceToEntity(this.entityToAttack);
+                    item = this.distanceTo(this.entityToAttack);
                     if(item >= 1.75D && item <= 7.0D) {
                         --this.rocks;
                         this.throwTime = 20;
@@ -386,32 +410,32 @@ public class EntityClayMan extends EntityAnimal {
                     }
                 }
             } else if(this.targetFollow != null) {
-                if(!this.hasPath() || this.rand.nextInt(10) == 0) {
-                    this.setPathToEntity(this.worldObj.getPathToEntity(this.targetFollow, this, 16.0F));
+                if(!this.hasPath() || this.random.nextInt(10) == 0) {
+                    this.setPathToEntity(this.world.getPathToEntity(this.targetFollow, this, 16.0F));
                 }
 
                 if(this.targetFollow instanceof EntityItem) {
                     EntityItem entityItem15 = (EntityItem)this.targetFollow;
-                    if(entityItem15.item != null && this.canEntityBeSeen(entityItem15) && (double)this.getDistanceToEntity(entityItem15) < 0.75D) {
+                    if(entityItem15.item != null && this.canEntityBeSeen(entityItem15) && (double)this.distanceTo(entityItem15) < 0.75D) {
                         ItemStack itemStack16 = entityItem15.item;
                         if(itemStack16.stackSize > 0) {
-                            if(itemStack16.itemID == Item.stick.itemID) {
+                            if(itemStack16.itemID == Item.stick.id) {
                                 this.weaponPoints = 15;
                                 this.stickSharp = false;
                                 this.gotcha((EntityItem)this.targetFollow);
-                            } else if(itemStack16.itemID == Item.leather.itemID) {
+                            } else if(itemStack16.itemID == Item.leather.id) {
                                 this.armorPoints = 15;
                                 this.armorPadded = false;
                                 this.gotcha((EntityItem)this.targetFollow);
-                            } else if(itemStack16.itemID == Block.gravel.blockID) {
+                            } else if(itemStack16.itemID == Block.gravel.id) {
                                 this.rocks = 15;
                                 this.gotcha((EntityItem)this.targetFollow);
-                            } else if(itemStack16.itemID == Item.dustGlowstone.itemID) {
+                            } else if(itemStack16.itemID == Item.dustGlowstone.id) {
                                 this.glowing = true;
                                 this.gotcha((EntityItem)this.targetFollow);
-                            } else if(itemStack16.itemID == Item.ingotGold.itemID) {
+                            } else if(itemStack16.itemID == Item.ingotGold.id) {
                                 boolean z22 = false;
-                                List list23 = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, this.boundingBox.expand(24.0D, 16.0D, 24.0D));
+                                List list23 = this.world.getEntitiesWithinAABBExcludingEntity(this, this.bb.expand(24.0D, 16.0D, 24.0D));
 
                                 for(int i32 = 0; i32 < list23.size(); ++i32) {
                                     Entity entity27 = (Entity)list23.get(i32);
@@ -427,69 +451,69 @@ public class EntityClayMan extends EntityAnimal {
                                 if(!z22) {
                                     this.king = true;
                                     this.gotcha((EntityItem)this.targetFollow);
-                                    entityItem15.setEntityDead();
+                                    entityItem15.remove();
                                 } else {
                                     this.targetFollow = null;
-                                    this.setPathToEntity((PathEntity)null);
+                                    this.setPathToEntity(null);
                                 }
-                            } else if(itemStack16.itemID == Item.sulphur.itemID) {
+                            } else if(itemStack16.itemID == Item.sulphur.id) {
                                 this.gunPowdered = true;
                                 this.gotcha((EntityItem)this.targetFollow);
-                            } else if(itemStack16.itemID == Item.dustSugar.itemID) {
+                            } else if(itemStack16.itemID == Item.dustSugar.id) {
                                 this.sugarTime = 1200;
                                 this.gotcha((EntityItem)this.targetFollow);
                             } else if(itemStack16.getItem() != null && itemStack16.getItem() instanceof ItemFood) {
                                 this.foodLeft = 4;
                                 this.gotcha((EntityItem)this.targetFollow);
-                            } else if(itemStack16.itemID == Item.clay.itemID) {
+                            } else if(itemStack16.itemID == Item.clay.id) {
                                 this.resPoints = 4;
                                 this.gotcha((EntityItem)this.targetFollow);
-                            } else if(itemStack16.itemID == Item.dustRedstone.itemID) {
+                            } else if(itemStack16.itemID == Item.dustRedstone.id) {
                                 this.smokeStock = 2;
                                 this.gotcha((EntityItem)this.targetFollow);
-                            } else if(itemStack16.itemID == Item.slimeball.itemID) {
+                            } else if(itemStack16.itemID == Item.slimeball.id) {
                                 this.gooStock = 2;
                                 this.gotcha((EntityItem)this.targetFollow);
-                            } else if(itemStack16.itemID == Item.ingotIron.itemID) {
+                            } else if(itemStack16.itemID == Item.ingotIron.id) {
                                 this.heavyCore = true;
                                 this.gotcha((EntityItem)this.targetFollow);
                             } else {
                                 double d24;
                                 double d30;
                                 double d36;
-                                if(itemStack16.itemID == Item.flint.itemID) {
+                                if(itemStack16.itemID == Item.flint.id) {
                                     if(this.weaponPoints > 0) {
                                         this.stickSharp = true;
 
                                         for(i17 = 0; i17 < 4; ++i17) {
-                                            d24 = this.posX + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                            d30 = this.boundingBox.minY + 0.125D + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.25D;
-                                            d36 = this.posZ + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                            Minecraft.getMinecraft().effectRenderer.addEffect(new EntityDiggingFX(this.worldObj, d24, d30, d36, 0.0D, 0.0D, 0.0D, Block.planksOak, 0, 0));
+                                            d24 = this.x + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                            d30 = this.bb.minY + 0.125D + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.25D;
+                                            d36 = this.z + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                            Minecraft.getMinecraft(this).effectRenderer.addEffect(new EntityDiggingFX(this.world, d24, d30, d36, 0.0D, 0.0D, 0.0D, Block.planksOak, 0, 0));
                                         }
 
-                                        this.worldObj.playSoundAtEntity(this, "random.wood click", 0.75F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
+                                        this.world.playSoundAtEntity(this, "randomom.wood click", 0.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
                                     }
 
                                     this.targetFollow = null;
-                                } else if(itemStack16.itemID == Block.wool.blockID) {
+                                } else if(itemStack16.itemID == Block.wool.id) {
                                     if(this.armorPoints > 0) {
                                         this.armorPadded = true;
 
                                         for(i17 = 0; i17 < 4; ++i17) {
-                                            d24 = this.posX + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                            d30 = this.boundingBox.minY + 0.125D + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.25D;
-                                            d36 = this.posZ + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                            Minecraft.getMinecraft().effectRenderer.addEffect(new EntityDiggingFX(this.worldObj, d24, d30, d36, 0.0D, 0.0D, 0.0D, Block.wool, 0, 0));
+                                            d24 = this.x + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                            d30 = this.bb.minY + 0.125D + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.25D;
+                                            d36 = this.z + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                            Minecraft.getMinecraft(this).effectRenderer.addEffect(new EntityDiggingFX(this.world, d24, d30, d36, 0.0D, 0.0D, 0.0D, Block.wool, 0, 0));
                                         }
 
-                                        this.worldObj.playSoundAtEntity(this, "step.cloth", 0.75F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
+                                        this.world.playSoundAtEntity(this, "step.cloth", 0.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
                                     }
 
                                     this.targetFollow = null;
                                 } else if(itemStack16.getItem() != null && itemStack16.getItem() instanceof ItemClayMan) {
                                     this.swingArm();
-                                    this.worldObj.playSoundAtEntity(entityItem15, "step.gravel", 0.8F, ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.2F + 1.0F) * 0.9F);
+                                    this.world.playSoundAtEntity(entityItem15, "step.gravel", 0.8F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F) * 0.9F);
                                     Item item34 = ClaySoldiers.greyDoll;
                                     if(this.clayTeam == 1) {
                                         item34 = ClaySoldiers.redDoll;
@@ -506,24 +530,24 @@ public class EntityClayMan extends EntityAnimal {
                                     }
 
                                     for(int i26 = 0; i26 < 18; ++i26) {
-                                        a = this.posX + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                        double d35 = this.posY + 0.25D + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                        double d37 = this.posZ + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                        Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySlimeFX(this.worldObj, a, d35, d37, item34));
+                                        a = this.x + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                        double d35 = this.y + 0.25D + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                        double d37 = this.z + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                        Minecraft.getMinecraft(this).effectRenderer.addEffect(new EntitySlimeFX(this.world, a, d35, d37, item34));
                                     }
 
-                                    entityClayMan21 = new EntityClayMan(this.worldObj, entityItem15.posX, entityItem15.posY, entityItem15.posZ, this.clayTeam);
-                                    this.worldObj.entityJoinedWorld(entityClayMan21);
+                                    entityClayMan21 = new EntityClayMan(this.world, entityItem15.x, entityItem15.y, entityItem15.z, this.clayTeam);
+                                    this.world.entityJoinedWorld(entityClayMan21);
                                     this.gotcha((EntityItem)this.targetFollow);
                                     --this.resPoints;
-                                } else if(itemStack16.itemID == Block.planksOak.blockID && this.ridingEntity == null || itemStack16.itemID == Block.planksOakPainted.blockID && this.ridingEntity == null) {
+                                } else if(itemStack16.itemID == Block.planksOak.id && !this.isPassenger() || itemStack16.itemID == Block.planksOakPainted.id && !this.isPassenger()) {
                                     byte b31 = 0;
                                     if(this.logs < 20 && itemStack16.stackSize >= 5) {
                                         b31 = 1;
                                     }
 
                                     if(b31 > 0) {
-                                        this.worldObj.playSoundAtEntity(this, "random.pop", 0.2F, ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.7F + 1.0F) * 2.0F);
+                                        this.world.playSoundAtEntity(this, "randomom.pop", 0.2F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
                                         if(b31 == 1) {
                                             this.logs += 5;
                                             if(entityItem15.item != null) {
@@ -532,33 +556,33 @@ public class EntityClayMan extends EntityAnimal {
                                         }
 
                                         if(entityItem15.item == null || entityItem15.item.stackSize <= 0) {
-                                            entityItem15.setEntityDead();
+                                            entityItem15.remove();
                                         }
                                     }
 
-                                    this.setPathToEntity((PathEntity)null);
+                                    this.setPathToEntity(null);
                                     this.targetFollow = null;
-                                } else if(itemStack16.itemID == Item.dye.itemID) {
+                                } else if(itemStack16.itemID == Item.dye.id) {
                                     this.targetFollow = null;
                                 }
                             }
                         }
                     }
-                } else if(this.targetFollow instanceof EntityClayMan && (double)this.getDistanceToEntity(this.targetFollow) < 1.75D) {
+                } else if(this.targetFollow instanceof EntityClayMan && (double)this.distanceTo(this.targetFollow) < 1.75D) {
                     this.targetFollow = null;
-                } else if(this.targetFollow instanceof EntityFish && (double)this.getDistanceToEntity(this.targetFollow) < 1.0D) {
+                } else if(this.targetFollow instanceof EntityBobber && (double)this.distanceTo(this.targetFollow) < 1.0D) {
                     this.targetFollow = null;
-                } else if(this.targetFollow instanceof EntityDirtHorse && (double)this.getDistanceToEntity(this.targetFollow) < 0.75D && this.gooTime <= 0) {
-                    if(this.ridingEntity == null && this.targetFollow.riddenByEntity == null && !this.heavyCore && this.logs <= 0) {
-                        this.mountEntity(this.targetFollow);
-                        this.worldObj.playSoundAtEntity(this, "step.gravel", 0.6F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
+                } else if(this.targetFollow instanceof EntityDirtHorse && (double)this.distanceTo(this.targetFollow) < 0.75D && this.gooTime <= 0) {
+                    if(!this.isPassenger() && this.targetFollow.passenger == null && !this.heavyCore && this.logs <= 0) {
+                        this.startRiding(this.targetFollow);
+                        this.world.playSoundAtEntity(this, "step.gravel", 0.6F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
                     }
 
                     this.targetFollow = null;
                 }
             } else {
                 this.updateBlockFinder();
-                if(this.logs > 0 && this.rand.nextInt(16) == 0) {
+                if(this.logs > 0 && this.random.nextInt(16) == 0) {
                     this.updateBuildings();
                 }
             }
@@ -584,12 +608,12 @@ public class EntityClayMan extends EntityAnimal {
     }
 
     public void updateBlockFinder() {
-        int x = MathHelper.floor_double(this.posX);
-        int y = MathHelper.floor_double(this.boundingBox.minY);
-        int z = MathHelper.floor_double(this.posZ);
+        int x = MathHelper.floor_double(this.x);
+        int y = MathHelper.floor_double(this.bb.minY);
+        int z = MathHelper.floor_double(this.z);
         if(this.blockX != 0 && this.blockY != 0 && this.blockZ != 0 && !this.hasPath()) {
-            PathEntity i = this.worldObj.getEntityPathToXYZ(this, this.blockX, this.blockY, this.blockZ, 16.0F);
-            if(i != null && this.rand.nextInt(5) != 0) {
+            Path i = this.world.getEntityPathToXYZ(this, this.blockX, this.blockY, this.blockZ, 16.0F);
+            if(i != null && this.random.nextInt(5) != 0) {
                 this.setPathToEntity(i);
             } else {
                 this.blockX = 0;
@@ -631,9 +655,9 @@ public class EntityClayMan extends EntityAnimal {
                     break;
                 }
 
-                i11 = x + this.rand.nextInt(6) - this.rand.nextInt(6);
-                j = y + this.rand.nextInt(3) - this.rand.nextInt(3);
-                k = z + this.rand.nextInt(6) - this.rand.nextInt(6);
+                i11 = x + this.random.nextInt(6) - this.random.nextInt(6);
+                j = y + this.random.nextInt(3) - this.random.nextInt(3);
+                k = z + this.random.nextInt(6) - this.random.nextInt(6);
             }
         }
 
@@ -647,14 +671,14 @@ public class EntityClayMan extends EntityAnimal {
     }
 
     public boolean isAirySpace(int x, int y, int z) {
-        int p = this.worldObj.getBlockId(x, y, z);
-        return p == 0 || Block.blocksList[p].getCollisionBoundingBoxFromPool(this.worldObj, x, y, z) == null;
+        int p = this.world.getBlockId(x, y, z);
+        return p == 0 || Block.blocksList[p].getCollisionBoundingBoxFromPool(this.world, x, y, z) == null;
     }
 
     public boolean checkSides(int a, int b, int c, int i, int j, int k, double dist, boolean first) {
-        if(b > 4 && b < 124 && this.worldObj.getBlockId(a, b, c) == Block.chestPlanksOak.blockID || b > 4 && b < 124 && this.worldObj.getBlockId(a, b, c) == Block.chestPlanksOakPainted.blockID) {
+        if(b > 4 && b < 124 && this.world.getBlockId(a, b, c) == Block.chestPlanksOak.id || b > 4 && b < 124 && this.world.getBlockId(a, b, c) == Block.chestPlanksOakPainted.id) {
             if(first && this.blockX == i && this.blockY == j && this.blockZ == k) {
-                this.setPathToEntity((PathEntity)null);
+                this.setPathToEntity(null);
                 this.blockX = 0;
                 this.blockY = 0;
                 this.blockZ = 0;
@@ -663,7 +687,7 @@ public class EntityClayMan extends EntityAnimal {
             }
 
             if(this.blockX == 0 && this.blockY == 0 && this.blockZ == 0 && this.chestOperations(a, b, c, false)) {
-                PathEntity emily = this.worldObj.getEntityPathToXYZ(this, i, j, k, 16.0F);
+                Path emily = this.world.getEntityPathToXYZ(this, i, j, k, 16.0F);
                 if(emily != null) {
                     this.setPathToEntity(emily);
                     this.blockX = i;
@@ -678,7 +702,7 @@ public class EntityClayMan extends EntityAnimal {
     }
 
     public boolean chestOperations(int x, int y, int z, boolean arrived) {
-        TileEntity te = this.worldObj.getBlockTileEntity(x, y, z);
+        TileEntity te = this.world.getBlockTileEntity(x, y, z);
         if(te != null && te instanceof TileEntityChest) {
             TileEntityChest chest = (TileEntityChest)te;
 
@@ -686,7 +710,7 @@ public class EntityClayMan extends EntityAnimal {
                 if(chest.getStackInSlot(q) != null) {
                     ItemStack stack = chest.getStackInSlot(q);
                     if(stack.stackSize > 0) {
-                        if(this.weaponPoints <= 0 && stack.itemID == Item.stick.itemID) {
+                        if(this.weaponPoints <= 0 && stack.itemID == Item.stick.id) {
                             if(arrived) {
                                 this.weaponPoints = 15;
                                 this.stickSharp = false;
@@ -696,7 +720,7 @@ public class EntityClayMan extends EntityAnimal {
                             return true;
                         }
 
-                        if(this.armorPoints <= 0 && stack.itemID == Item.leather.itemID) {
+                        if(this.armorPoints <= 0 && stack.itemID == Item.leather.id) {
                             if(arrived) {
                                 this.armorPoints = 15;
                                 this.armorPadded = false;
@@ -706,7 +730,7 @@ public class EntityClayMan extends EntityAnimal {
                             return true;
                         }
 
-                        if(this.rocks <= 0 && stack.itemID == Block.gravel.blockID) {
+                        if(this.rocks <= 0 && stack.itemID == Block.gravel.id) {
                             if(arrived) {
                                 this.rocks = 15;
                                 this.gotcha(chest, q);
@@ -715,7 +739,7 @@ public class EntityClayMan extends EntityAnimal {
                             return true;
                         }
 
-                        if(!this.glowing && stack.itemID == Item.dustGlowstone.itemID) {
+                        if(!this.glowing && stack.itemID == Item.dustGlowstone.id) {
                             if(arrived) {
                                 this.glowing = true;
                                 this.gotcha(chest, q);
@@ -725,9 +749,9 @@ public class EntityClayMan extends EntityAnimal {
                         }
 
                         int a;
-                        if(!this.king && stack.itemID == Item.ingotGold.itemID) {
+                        if(!this.king && stack.itemID == Item.ingotGold.id) {
                             boolean z21 = false;
-                            List list24 = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, this.boundingBox.expand(24.0D, 16.0D, 24.0D));
+                            List list24 = this.world.getEntitiesWithinAABBExcludingEntity(this, this.bb.expand(24.0D, 16.0D, 24.0D));
 
                             for(a = 0; a < list24.size(); ++a) {
                                 Entity entity23 = (Entity)list24.get(a);
@@ -749,7 +773,7 @@ public class EntityClayMan extends EntityAnimal {
                                 return true;
                             }
                         } else {
-                            if(!this.gunPowdered && stack.itemID == Item.sulphur.itemID) {
+                            if(!this.gunPowdered && stack.itemID == Item.sulphur.id) {
                                 if(arrived) {
                                     this.gunPowdered = true;
                                     this.gotcha(chest, q);
@@ -758,7 +782,7 @@ public class EntityClayMan extends EntityAnimal {
                                 return true;
                             }
 
-                            if(this.sugarTime <= 0 && stack.itemID == Item.dustSugar.itemID) {
+                            if(this.sugarTime <= 0 && stack.itemID == Item.dustSugar.id) {
                                 if(arrived) {
                                     this.sugarTime = 1200;
                                     this.gotcha(chest, q);
@@ -776,7 +800,7 @@ public class EntityClayMan extends EntityAnimal {
                                 return true;
                             }
 
-                            if(this.resPoints <= 0 && stack.itemID == Item.clay.itemID) {
+                            if(this.resPoints <= 0 && stack.itemID == Item.clay.id) {
                                 if(arrived) {
                                     this.resPoints = 4;
                                     this.gotcha(chest, q);
@@ -785,7 +809,7 @@ public class EntityClayMan extends EntityAnimal {
                                 return true;
                             }
 
-                            if(this.gooStock <= 0 && stack.itemID == Item.slimeball.itemID) {
+                            if(this.gooStock <= 0 && stack.itemID == Item.slimeball.id) {
                                 if(arrived) {
                                     this.gooStock = 2;
                                     this.gotcha(chest, q);
@@ -794,7 +818,7 @@ public class EntityClayMan extends EntityAnimal {
                                 return true;
                             }
 
-                            if(this.smokeStock <= 0 && stack.itemID == Item.dustRedstone.itemID) {
+                            if(this.smokeStock <= 0 && stack.itemID == Item.dustRedstone.id) {
                                 if(arrived) {
                                     this.smokeStock = 2;
                                     this.gotcha(chest, q);
@@ -803,14 +827,14 @@ public class EntityClayMan extends EntityAnimal {
                                 return true;
                             }
 
-                            if(stack.itemID == Block.planksOak.blockID && this.ridingEntity == null || stack.itemID == Block.planksOakPainted.blockID && this.ridingEntity == null) {
+                            if(stack.itemID == Block.planksOak.id && !this.isPassenger() || stack.itemID == Block.planksOakPainted.id && !this.isPassenger()) {
                                 byte b19 = 0;
                                 if(this.logs < 20 && stack.stackSize >= 5) {
                                     b19 = 1;
                                 }
 
                                 if(arrived && b19 > 0) {
-                                    this.worldObj.playSoundAtEntity(this, "random.pop", 0.2F, ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.7F + 1.0F) * 2.0F);
+                                    this.world.playSoundAtEntity(this, "randomom.pop", 0.2F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
                                     if(b19 == 1) {
                                         this.logs += 5;
                                         chest.decrStackSize(q, 5);
@@ -824,41 +848,41 @@ public class EntityClayMan extends EntityAnimal {
                             double b1;
                             int i18;
                             double d22;
-                            if(this.weaponPoints > 0 && !this.stickSharp && stack.itemID == Item.flint.itemID) {
+                            if(this.weaponPoints > 0 && !this.stickSharp && stack.itemID == Item.flint.id) {
                                 if(arrived) {
                                     this.stickSharp = true;
 
                                     for(i18 = 0; i18 < 4; ++i18) {
-                                        d22 = this.posX + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                        a1 = this.boundingBox.minY + 0.125D + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.25D;
-                                        b1 = this.posZ + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                        Minecraft.getMinecraft().effectRenderer.addEffect(new EntityDiggingFX(this.worldObj, d22, a1, b1, 0.0D, 0.0D, 0.0D, Block.planksOak, 0, 0));
+                                        d22 = this.x + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                        a1 = this.bb.minY + 0.125D + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.25D;
+                                        b1 = this.z + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                        Minecraft.getMinecraft(this).effectRenderer.addEffect(new EntityDiggingFX(this.world, d22, a1, b1, 0.0D, 0.0D, 0.0D, Block.planksOak, 0, 0));
                                     }
 
-                                    this.worldObj.playSoundAtEntity(this, "random.wood click", 0.75F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
+                                    this.world.playSoundAtEntity(this, "randomom.wood click", 0.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
                                 }
 
                                 return true;
                             }
 
-                            if(this.armorPoints > 0 && !this.armorPadded && stack.itemID == Block.wool.blockID) {
+                            if(this.armorPoints > 0 && !this.armorPadded && stack.itemID == Block.wool.id) {
                                 if(arrived) {
                                     this.armorPadded = true;
 
                                     for(i18 = 0; i18 < 4; ++i18) {
-                                        d22 = this.posX + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                        a1 = this.boundingBox.minY + 0.125D + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.25D;
-                                        b1 = this.posZ + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                        Minecraft.getMinecraft().effectRenderer.addEffect(new EntityDiggingFX(this.worldObj, d22, a1, b1, 0.0D, 0.0D, 0.0D, Block.wool, 0, 0));
+                                        d22 = this.x + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                        a1 = this.bb.minY + 0.125D + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.25D;
+                                        b1 = this.z + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                        Minecraft.getMinecraft(this).effectRenderer.addEffect(new EntityDiggingFX(this.world, d22, a1, b1, 0.0D, 0.0D, 0.0D, Block.wool, 0, 0));
                                     }
 
-                                    this.worldObj.playSoundAtEntity(this, "step.cloth", 0.75F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
+                                    this.world.playSoundAtEntity(this, "step.cloth", 0.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
                                 }
 
                                 return true;
                             }
 
-                            if(!this.heavyCore && this.ridingEntity == null && stack.itemID == Item.ingotIron.itemID) {
+                            if(!this.heavyCore && this.vehicle == null && stack.itemID == Item.ingotIron.id) {
                                 if(arrived) {
                                     this.heavyCore = true;
                                     this.gotcha(chest, q);
@@ -888,17 +912,17 @@ public class EntityClayMan extends EntityAnimal {
                                         }
 
                                         for(a = 0; a < 18; ++a) {
-                                            a1 = this.posX + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                            b1 = this.posY + 0.25D + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                            double c1 = this.posZ + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                            Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySlimeFX(this.worldObj, a1, b1, c1, item1));
+                                            a1 = this.x + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                            b1 = this.y + 0.25D + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                            double c1 = this.z + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                            Minecraft.getMinecraft(this).effectRenderer.addEffect(new EntitySlimeFX(this.world, a1, b1, c1, item1));
                                         }
 
-                                        double d20 = this.posX + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                        double b = this.posY + (double)this.rand.nextFloat() * 0.125D;
-                                        double c = this.posZ + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                                        EntityClayMan ec = new EntityClayMan(this.worldObj, d20, b, c, this.clayTeam);
-                                        this.worldObj.entityJoinedWorld(ec);
+                                        double d20 = this.x + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                        double b = this.y + (double)this.random.nextFloat() * 0.125D;
+                                        double c = this.z + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                                        EntityClayMan ec = new EntityClayMan(this.world, d20, b, c, this.clayTeam);
+                                        this.world.entityJoinedWorld(ec);
                                         this.gotcha(chest, q);
                                         --this.resPoints;
                                     }
@@ -916,9 +940,9 @@ public class EntityClayMan extends EntityAnimal {
     }
 
     public void updateBuildings() {
-        int x = MathHelper.floor_double(this.posX);
-        int y = MathHelper.floor_double(this.boundingBox.minY);
-        int z = MathHelper.floor_double(this.posZ);
+        int x = MathHelper.floor_double(this.x);
+        int y = MathHelper.floor_double(this.bb.minY);
+        int z = MathHelper.floor_double(this.z);
         if(y >= 4 && y <= 120) {
             byte broad = 2;
             byte high = 3;
@@ -936,7 +960,7 @@ public class EntityClayMan extends EntityAnimal {
                             if(this.isAirySpace(x + gee, y + b, z + list)) {
                                 flag = true;
                             }
-                        } else if(!this.isAirySpace(x + gee, y + b, z + list) || this.worldObj.getBlockMaterial(x + gee, y + b, z + list) == Material.water) {
+                        } else if(!this.isAirySpace(x + gee, y + b, z + list) || this.world.getBlockMaterial(x + gee, y + b, z + list) == Material.water) {
                             flag = true;
                         }
                     }
@@ -945,16 +969,16 @@ public class EntityClayMan extends EntityAnimal {
 
             if(!flag) {
                 double d10 = (double)broad;
-                List list11 = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, this.boundingBox.expand(d10, d10, d10));
+                List list11 = this.world.getEntitiesWithinAABBExcludingEntity(this, this.bb.expand(d10, d10, d10));
                 if(list11.size() > 0) {
                     flag = true;
                 }
             }
 
             if(!flag) {
-                if(this.logs == 20 && this.rand.nextInt(2) == 0) {
+                if(this.logs == 20 && this.random.nextInt(2) == 0) {
                     this.buildHouseThree();
-                } else if(this.logs >= 10 && this.rand.nextInt(3) > 0) {
+                } else if(this.logs >= 10 && this.random.nextInt(3) > 0) {
                     this.buildHouseTwo();
                 } else if(this.logs >= 5) {
                     this.buildHouseOne();
@@ -965,15 +989,15 @@ public class EntityClayMan extends EntityAnimal {
     }
 
     public void dropLogs() {
-        this.dropItem(Block.wool.blockID, this.logs);
+        this.spawnAtLocation(Block.wool.id, this.logs);
         this.logs = 0;
     }
 
     public void buildHouseOne() {
-        int x = MathHelper.floor_double(this.posX + 0.5D);
-        int y = MathHelper.floor_double(this.boundingBox.minY);
-        int z = MathHelper.floor_double(this.posZ + 0.5D);
-        int direction = this.rand.nextInt(4);
+        int x = MathHelper.floor_double(this.x + 0.5D);
+        int y = MathHelper.floor_double(this.bb.minY);
+        int z = MathHelper.floor_double(this.z + 0.5D);
+        int direction = this.random.nextInt(4);
 
         for(int j = 0; j < 3; ++j) {
             int b = j;
@@ -995,45 +1019,45 @@ public class EntityClayMan extends EntityAnimal {
 
                     if(j == 0) {
                         if(i != -1 && i != 2 && k != -1) {
-                            this.worldObj.setBlockWithNotify(x + a, y + b, z + c, 0);
+                            this.world.setBlockWithNotify(x + a, y + b, z + c, 0);
                         } else {
-                            this.worldObj.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.blockID);
+                            this.world.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.id);
                         }
                     } else if(j == 1) {
                         if(i == -1) {
-                            this.worldObj.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.blockID);
-                            this.worldObj.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2 + (direction % 2 == 0 ? 1 : -1)) % 4);
+                            this.world.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.id);
+                            this.world.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2 + (direction % 2 == 0 ? 1 : -1)) % 4);
                         } else if(i == 2) {
-                            this.worldObj.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.blockID);
-                            this.worldObj.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2) % 4);
+                            this.world.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.id);
+                            this.world.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2) % 4);
                         } else if(k == -1) {
-                            this.worldObj.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.blockID);
+                            this.world.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.id);
                         } else {
-                            this.worldObj.setBlockWithNotify(x + a, y + b, z + c, 0);
+                            this.world.setBlockWithNotify(x + a, y + b, z + c, 0);
                         }
                     } else if(i == 0) {
-                        this.worldObj.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.blockID);
-                        this.worldObj.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2 + (direction % 2 == 0 ? 1 : -1)) % 4);
+                        this.world.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.id);
+                        this.world.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2 + (direction % 2 == 0 ? 1 : -1)) % 4);
                     } else if(i == 1) {
-                        this.worldObj.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.blockID);
-                        this.worldObj.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2) % 4);
+                        this.world.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.id);
+                        this.world.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2) % 4);
                     } else {
-                        this.worldObj.setBlockWithNotify(x + a, y + b, z + c, 0);
+                        this.world.setBlockWithNotify(x + a, y + b, z + c, 0);
                     }
                 }
             }
         }
 
-        this.worldObj.playSoundAtEntity(this, "random.wood click", 1.75F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
-        this.worldObj.playSoundAtEntity(this, "step.wood", 1.75F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
+        this.world.playSoundAtEntity(this, "random.woodclick", 1.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
+        this.world.playSoundAtEntity(this, "step.wood", 1.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
         this.logs -= 5;
     }
 
     public void buildHouseTwo() {
-        int x = MathHelper.floor_double(this.posX);
-        int y = MathHelper.floor_double(this.boundingBox.minY);
-        int z = MathHelper.floor_double(this.posZ);
-        int direction = this.rand.nextInt(4);
+        int x = MathHelper.floor_double(this.x);
+        int y = MathHelper.floor_double(this.bb.minY);
+        int z = MathHelper.floor_double(this.z);
+        int direction = this.random.nextInt(4);
 
         for(int j = 0; j < 3; ++j) {
             int b = j;
@@ -1057,41 +1081,41 @@ public class EntityClayMan extends EntityAnimal {
                         if(j != 0 && j != 1) {
                             if(j == 2) {
                                 if(i == -2) {
-                                    this.worldObj.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.blockID);
-                                    this.worldObj.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2 + (direction % 2 == 0 ? 1 : -1)) % 4);
+                                    this.world.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.id);
+                                    this.world.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2 + (direction % 2 == 0 ? 1 : -1)) % 4);
                                 } else if(i == 2) {
-                                    this.worldObj.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.blockID);
-                                    this.worldObj.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2) % 4);
+                                    this.world.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.id);
+                                    this.world.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2) % 4);
                                 } else if(k == -2) {
-                                    this.worldObj.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.blockID);
-                                    this.worldObj.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + (direction % 2 == 0 ? 1 : -1)) % 4);
+                                    this.world.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.id);
+                                    this.world.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + (direction % 2 == 0 ? 1 : -1)) % 4);
                                 } else if(k == 2) {
-                                    this.worldObj.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.blockID);
-                                    this.worldObj.setBlockMetadataWithNotify(x + a, y + b, z + c, direction % 4);
+                                    this.world.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.id);
+                                    this.world.setBlockMetadataWithNotify(x + a, y + b, z + c, direction % 4);
                                 } else {
-                                    this.worldObj.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.blockID);
+                                    this.world.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.id);
                                 }
                             }
                         } else if(i != -2 && i != 2 && k != -2 && (k != 2 || i == 0 && j != 1)) {
-                            this.worldObj.setBlockWithNotify(x + a, y + b, z + c, 0);
+                            this.world.setBlockWithNotify(x + a, y + b, z + c, 0);
                         } else {
-                            this.worldObj.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.blockID);
+                            this.world.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.id);
                         }
                     }
                 }
             }
         }
 
-        this.worldObj.playSoundAtEntity(this, "random.wood click", 1.75F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
-        this.worldObj.playSoundAtEntity(this, "step.wood", 1.75F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
+        this.world.playSoundAtEntity(this, "random.woodclick", 1.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
+        this.world.playSoundAtEntity(this, "step.wood", 1.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
         this.logs -= 10;
     }
 
     public void buildHouseThree() {
-        int x = MathHelper.floor_double(this.posX);
-        int y = MathHelper.floor_double(this.boundingBox.minY);
-        int z = MathHelper.floor_double(this.posZ);
-        int direction = this.rand.nextInt(4);
+        int x = MathHelper.floor_double(this.x);
+        int y = MathHelper.floor_double(this.bb.minY);
+        int z = MathHelper.floor_double(this.z);
+        int direction = this.random.nextInt(4);
 
         for(int j = 0; j < 4; ++j) {
             int b = j;
@@ -1115,43 +1139,43 @@ public class EntityClayMan extends EntityAnimal {
                         if(j < 3) {
                             if(i != -3 && i != 3 && k != -2 && (k != 2 || i == 0 && j <= 0)) {
                                 if(i == -2 && j == 0 && k == 0) {
-                                    this.worldObj.setBlock(x + a, y + b, z + c, Block.chestPlanksOak.blockID);
-                                    this.worldObj.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2) % 4);
-                                    TileEntityChest tileEntityChest12 = (TileEntityChest)this.worldObj.getBlockTileEntity(x + a, y + b, z + c);
+                                    this.world.setBlock(x + a, y + b, z + c, Block.chestPlanksOak.id);
+                                    this.world.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2) % 4);
+                                    TileEntityChest tileEntityChest12 = (TileEntityChest)this.world.getBlockTileEntity(x + a, y + b, z + c);
                                     tileEntityChest12.setInventorySlotContents(0, new ItemStack(Item.stick, 16, 0));
                                 } else if(i == 0 && j == 0 && k == -1) {
-                                    this.worldObj.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.blockID);
-                                    this.worldObj.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2 + (direction % 2 == 0 ? 1 : -1)) % 4);
+                                    this.world.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.id);
+                                    this.world.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2 + (direction % 2 == 0 ? 1 : -1)) % 4);
                                 } else if(i == 1 && j == 1 && k == -1) {
-                                    this.worldObj.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.blockID);
-                                    this.worldObj.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2 + (direction % 2 == 0 ? 1 : -1)) % 4);
+                                    this.world.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.id);
+                                    this.world.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + 2 + (direction % 2 == 0 ? 1 : -1)) % 4);
                                 } else if(i == 2 && j == 1 && k == -1) {
-                                    this.worldObj.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.blockID);
+                                    this.world.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.id);
                                 } else if(i == 2 && j == 2 && k == 0) {
-                                    this.worldObj.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.blockID);
-                                    this.worldObj.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + (direction % 2 == 0 ? 1 : -1)) % 4);
+                                    this.world.setBlock(x + a, y + b, z + c, Block.stairsPlanksOak.id);
+                                    this.world.setBlockMetadataWithNotify(x + a, y + b, z + c, (direction + (direction % 2 == 0 ? 1 : -1)) % 4);
                                 } else if(i == 0 && j == 2 && k == -1) {
-                                    this.worldObj.setBlockWithNotify(x + a, y + b, z + c, 0);
+                                    this.world.setBlockWithNotify(x + a, y + b, z + c, 0);
                                 } else if(i == 1 && j == 2 && k == -1) {
-                                    this.worldObj.setBlockWithNotify(x + a, y + b, z + c, 0);
+                                    this.world.setBlockWithNotify(x + a, y + b, z + c, 0);
                                 } else if(i == 2 && j == 2 && k == -1) {
-                                    this.worldObj.setBlockWithNotify(x + a, y + b, z + c, 0);
+                                    this.world.setBlockWithNotify(x + a, y + b, z + c, 0);
                                 } else if(j == 2) {
-                                    this.worldObj.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.blockID);
+                                    this.world.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.id);
                                 } else {
-                                    this.worldObj.setBlockWithNotify(x + a, y + b, z + c, 0);
+                                    this.world.setBlockWithNotify(x + a, y + b, z + c, 0);
                                 }
                             } else {
-                                this.worldObj.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.blockID);
+                                this.world.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.id);
                             }
                         } else if(j == 3) {
                             if(i != -3 && i != 3 && k != -2 && (k != 2 || i == 0 && j <= 0)) {
-                                this.worldObj.setBlockWithNotify(x + a, y + b, z + c, 0);
+                                this.world.setBlockWithNotify(x + a, y + b, z + c, 0);
                             } else if(i != -2 && i != 0 && i != 2 && k != 0) {
-                                this.worldObj.setBlockWithNotify(x + a, y + b, z + c, Block.stairsPlanksOak.blockID);
-                                this.worldObj.setBlockMetadataWithNotify(x + a, y + b, z + c, 2);
+                                this.world.setBlockWithNotify(x + a, y + b, z + c, Block.stairsPlanksOak.id);
+                                this.world.setBlockMetadataWithNotify(x + a, y + b, z + c, 2);
                             } else {
-                                this.worldObj.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.blockID);
+                                this.world.setBlockWithNotify(x + a, y + b, z + c, Block.planksOak.id);
                             }
                         }
                     }
@@ -1159,23 +1183,23 @@ public class EntityClayMan extends EntityAnimal {
             }
         }
 
-        this.worldObj.playSoundAtEntity(this, "random.wood click", 1.75F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
-        this.worldObj.playSoundAtEntity(this, "step.wood", 1.75F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
+        this.world.playSoundAtEntity(this, "randomom.wood click", 1.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
+        this.world.playSoundAtEntity(this, "step.wood", 1.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
         this.logs -= 20;
     }
 
     @Override
     public void moveEntityWithHeading(float f, float f1) {
         super.moveEntityWithHeading(f, f1);
-        double d2 = (this.posX - this.prevPosX) * 2.0D;
-        double d3 = (this.posZ - this.prevPosZ) * 2.0D;
+        double d2 = (this.x - this.xo) * 2.0D;
+        double d3 = (this.z - this.zo) * 2.0D;
         float f5 = MathHelper.sqrt_double(d2 * d2 + d3 * d3) * 4.0F;
         if(f5 > 1.0F) {
             f5 = 1.0F;
         }
 
-        this.field_704_R += (f5 - this.field_704_R) * 0.4F;
-        this.field_703_S += this.field_704_R;
+        this.limbYaw += (f5 - this.limbYaw) * 0.4F;
+        this.limbSwing += this.limbYaw;
     }
 
     public void swingArm() {
@@ -1198,12 +1222,12 @@ public class EntityClayMan extends EntityAnimal {
     public boolean hitTargetMakesDead(Entity e) {
         this.strikeTime = 12;
         this.swingArm();
-        int power = this.weaponPoints > 0 ? 3 + this.rand.nextInt(2) + (this.stickSharp ? 1 : 0) : 2;
+        int power = this.weaponPoints > 0 ? 3 + this.random.nextInt(2) + (this.stickSharp ? 1 : 0) : 2;
         if(this.weaponPoints > 0) {
             --this.weaponPoints;
         }
 
-        boolean flag = e.attackEntityFrom(this, power, (DamageType) null);
+        boolean flag = e.hurt(this, power, null);
         if(flag && e instanceof EntityLiving) {
             EntityLiving el = (EntityLiving)e;
             if(el.health <= 0) {
@@ -1215,38 +1239,38 @@ public class EntityClayMan extends EntityAnimal {
     }
 
     public void throwRockAtEnemy(Entity entity) {
-        double d = entity.posX - this.posX;
-        double d1 = entity.posZ - this.posZ;
-        EntityGravelChunk entitygravelchunk = new EntityGravelChunk(this.worldObj, this, this.clayTeam);
-        entitygravelchunk.posY += 0.3999999761581421D;
-        double d2 = entity.posY + (double)entity.getEyeHeight() - 0.10000000298023223D - entitygravelchunk.posY;
+        double d = entity.x - this.x;
+        double d1 = entity.z - this.z;
+        EntityGravelChunk entitygravelchunk = new EntityGravelChunk(this.world, this, this.clayTeam);
+        entitygravelchunk.y += 0.3999999761581421D;
+        double d2 = entity.y + (double)entity.getHeadHeight() - 0.10000000298023223D - entitygravelchunk.y;
         float f1 = MathHelper.sqrt_double(d * d + d1 * d1) * 0.2F;
-        this.worldObj.entityJoinedWorld(entitygravelchunk);
+        this.world.entityJoinedWorld(entitygravelchunk);
         entitygravelchunk.setArrowHeading(d, d2 + (double)f1, d1, 0.6F, 12.0F);
         this.attackTime = 30;
         this.moveForward = -this.moveForward;
-        this.rotationYaw = (float)(Math.atan2(d1, d) * 180.0D / (double)(float)Math.PI) - 90.0F;
+        this.yRot = (float)(Math.atan2(d1, d) * 180.0D / (double)(float)Math.PI) - 90.0F;
         this.hasAttacked = true;
         this.swingLeftArm();
     }
 
     public void gotcha(EntityItem item) {
-        this.worldObj.playSoundAtEntity(item, "random.pop", 0.2F, ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.7F + 1.0F) * 2.0F);
+        this.world.playSoundAtEntity(item, "randomom.pop", 0.2F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
         if(item.item != null) {
             --item.item.stackSize;
             if(item.item.stackSize <= 0) {
-                item.setEntityDead();
+                item.remove();
             }
         } else {
-            item.setEntityDead();
+            item.remove();
         }
 
         this.targetFollow = null;
-        this.setPathToEntity((PathEntity)null);
+        this.setPathToEntity(null);
     }
 
     public void gotcha(TileEntityChest chest, int q) {
-        this.worldObj.playSoundAtEntity(this, "random.pop", 0.2F, ((this.rand.nextFloat() - this.rand.nextFloat()) * 0.7F + 1.0F) * 2.0F);
+        this.world.playSoundAtEntity(this, "randomom.pop", 0.2F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
         chest.decrStackSize(q, 1);
     }
 
@@ -1303,14 +1327,14 @@ public class EntityClayMan extends EntityAnimal {
 
     @Override
     protected String getHurtSound() {
-        this.worldObj.playSoundAtEntity(this, "random.hurt", 0.6F, 1.0F * (this.rand.nextFloat() * 0.2F + 1.6F));
-        this.worldObj.playSoundAtEntity(this, "step.gravel", 0.6F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
+        this.world.playSoundAtEntity(this, "randomom.hurt", 0.6F, 1.0F * (this.random.nextFloat() * 0.2F + 1.6F));
+        this.world.playSoundAtEntity(this, "step.gravel", 0.6F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
         return "";
     }
 
     @Override
     protected String getDeathSound() {
-        this.worldObj.playSoundAtEntity(this, "random.hurt", 0.6F, 1.0F * (this.rand.nextFloat() * 0.2F + 1.6F));
+        this.world.playSoundAtEntity(this, "randomom.hurt", 0.6F, 1.0F * (this.random.nextFloat() * 0.2F + 1.6F));
         return "step.gravel";
     }
 
@@ -1318,24 +1342,24 @@ public class EntityClayMan extends EntityAnimal {
     protected void jump() {
         if(this.gooTime <= 0) {
             if(this.sugarTime > 0) {
-                this.motionY = 0.375D;
+                this.yd = 0.375D;
             } else {
-                this.motionY = 0.275D;
+                this.yd = 0.275D;
             }
 
         }
     }
 
-    @Override
+
     public boolean isOnLadder() {
-        if(this.logs <= 0 && this.isCollidedHorizontally && !this.onGround && this.climbTime > 0) {
+        if(this.logs <= 0 && this.horizontalCollision && !this.onGround && this.climbTime > 0) {
             if(this.climbTime != 10) {
                 this.throwTime = 5;
                 --this.climbTime;
                 return true;
             }
 
-            if(this.motionY < 0.05D) {
+            if(this.yd < 0.05D) {
                 --this.climbTime;
                 this.throwTime = 5;
                 return true;
@@ -1412,49 +1436,49 @@ public class EntityClayMan extends EntityAnimal {
                 item1 = ClaySoldiers.purpleDoll;
             }
 
-            this.dropItem(item1.itemID, 1);
+            this.spawnAtLocation(item1.id, 1);
             if(this.resPoints > 0) {
-                this.dropItem(Item.clay.itemID, 1);
+                this.spawnAtLocation(Item.clay.id, 1);
             }
 
-            if(this.weaponPoints > 7 && this.rand.nextInt(2) == 0) {
-                this.dropItem(Item.stick.itemID, 1);
+            if(this.weaponPoints > 7 && this.random.nextInt(2) == 0) {
+                this.spawnAtLocation(Item.stick.id, 1);
             }
 
-            if(this.armorPoints > 7 && this.rand.nextInt(2) == 0) {
-                this.dropItem(Item.leather.itemID, 1);
+            if(this.armorPoints > 7 && this.random.nextInt(2) == 0) {
+                this.spawnAtLocation(Item.leather.id, 1);
             }
 
-            if(this.rocks > 7 && this.rand.nextInt(2) == 0) {
-                this.dropItem(Block.gravel.blockID, 1);
+            if(this.rocks > 7 && this.random.nextInt(2) == 0) {
+                this.spawnAtLocation(Block.gravel.id, 1);
             }
 
-            if(this.smokeStock > 1 && this.rand.nextInt(2) == 0) {
-                this.dropItem(Item.dustRedstone.itemID, 1);
+            if(this.smokeStock > 1 && this.random.nextInt(2) == 0) {
+                this.spawnAtLocation(Item.dustRedstone.id, 1);
             }
 
-            if(this.gooStock > 1 && this.rand.nextInt(2) == 0) {
-                this.dropItem(Item.slimeball.itemID, 1);
+            if(this.gooStock > 1 && this.random.nextInt(2) == 0) {
+                this.spawnAtLocation(Item.slimeball.id, 1);
             }
 
-            if(this.smokeStock > 1 && this.rand.nextInt(2) == 0) {
-                this.dropItem(Item.dustRedstone.itemID, 1);
+            if(this.smokeStock > 1 && this.random.nextInt(2) == 0) {
+                this.spawnAtLocation(Item.dustRedstone.id, 1);
             }
 
-            if(this.gooStock > 1 && this.rand.nextInt(2) == 0) {
-                this.dropItem(Item.slimeball.itemID, 1);
+            if(this.gooStock > 1 && this.random.nextInt(2) == 0) {
+                this.spawnAtLocation(Item.slimeball.id, 1);
             }
 
-            if(this.glowing && this.rand.nextInt(2) == 0) {
-                this.dropItem(Item.dustGlowstone.itemID, 1);
+            if(this.glowing && this.random.nextInt(2) == 0) {
+                this.spawnAtLocation(Item.dustGlowstone.id, 1);
             }
 
             if(this.king) {
-                this.dropItem(Item.ingotGold.itemID, 1);
+                this.spawnAtLocation(Item.ingotGold.id, 1);
             }
 
             if(this.heavyCore) {
-                this.dropItem(Item.ingotIron.itemID, 1);
+                this.spawnAtLocation(Item.ingotIron.id, 1);
             }
 
             if(this.logs > 0) {
@@ -1464,10 +1488,10 @@ public class EntityClayMan extends EntityAnimal {
 
     }
 
-    @Override
+
     public boolean attackEntityFrom(Entity e, int i, DamageType type) {
-        if(this.ridingEntity != null && i < 100 && this.rand.nextInt(2) == 0) {
-            return this.ridingEntity.attackEntityFrom(e, i, (DamageType)null);
+        if(this.vehicle != null && i < 100 && this.random.nextInt(2) == 0) {
+            return this.vehicle.hurt(e, i, (DamageType)null);
         } else {
             if(e != null && e instanceof EntityClayMan) {
                 EntityClayMan fred = (EntityClayMan)e;
@@ -1500,49 +1524,49 @@ public class EntityClayMan extends EntityAnimal {
                     double q;
                     double b;
                     double c;
-                    if((fred.smokeStock <= 0 || this.smokeTime <= 0 || this.rand.nextInt(2) == 0) && fred.gooStock > 0 && this.gooTime <= 0 && this.onGround) {
+                    if((fred.smokeStock <= 0 || this.smokeTime <= 0 || this.random.nextInt(2) == 0) && fred.gooStock > 0 && this.gooTime <= 0 && this.onGround) {
                         --fred.gooStock;
                         this.gooTime = 150;
-                        this.worldObj.playSoundAtEntity(this, "mob.slimeattack", 0.75F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
+                        this.world.playSoundAtEntity(this, "mob.slimeattack", 0.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
 
                         for(item1 = 0; item1 < 4; ++item1) {
-                            q = this.posX + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                            b = this.boundingBox.minY + 0.125D + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                            c = this.posZ + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                            this.worldObj.spawnParticle("slime", q, b, c, 0.0D, 0.1D, 0.0D);
+                            q = this.x + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                            b = this.bb.minY + 0.125D + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                            c = this.z + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                            this.world.spawnParticle("slime", q, b, c, 0.0D, 0.1D, 0.0D);
                         }
 
-                        this.motionX = 0.0D;
-                        this.motionY = 0.0D;
-                        this.motionZ = 0.0D;
+                        this.xd = 0.0D;
+                        this.yd = 0.0D;
+                        this.zd = 0.0D;
                         this.moveForward = 0.0F;
                         this.moveStrafing = 0.0F;
                         this.isJumping = false;
                     } else if(fred.smokeStock > 0 && this.smokeTime <= 0) {
                         --fred.smokeStock;
                         this.smokeTime = 100;
-                        this.worldObj.playSoundAtEntity(this, "random.fizz", 0.75F, 1.0F / (this.rand.nextFloat() * 0.2F + 0.9F));
+                        this.world.playSoundAtEntity(this, "randomom.fizz", 0.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
 
                         for(item1 = 0; item1 < 8; ++item1) {
-                            q = this.posX + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                            b = this.boundingBox.minY + 0.25D + (double)this.rand.nextFloat() * 0.25D;
-                            c = this.posZ + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                            this.worldObj.spawnParticle("reddust", q, b, c, 0.0D, 0.1D, 0.0D);
+                            q = this.x + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                            b = this.bb.minY + 0.25D + (double)this.random.nextFloat() * 0.25D;
+                            c = this.z + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                            this.world.spawnParticle("reddust", q, b, c, 0.0D, 0.1D, 0.0D);
                         }
 
                         this.targetFollow = null;
                         this.entityToAttack = null;
-                        this.setPathToEntity((PathEntity)null);
+                        this.setPathToEntity(null);
                     }
                 }
             } else {
                 i = 20;
-                if(e instanceof EntityFish) {
+                if(e instanceof EntityBobber) {
                     return false;
                 }
             }
 
-            boolean z12 = super.attackEntityFrom(e, i, (DamageType)null);
+            boolean z12 = super.hurt(e, i, (DamageType)null);
             if(z12 && this.health <= 0) {
                 Item item13 = ClaySoldiers.greyDoll;
                 if(this.clayTeam == 1) {
@@ -1560,19 +1584,19 @@ public class EntityClayMan extends EntityAnimal {
                 }
 
                 for(int i14 = 0; i14 < 24; ++i14) {
-                    double a = this.posX + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                    double b1 = this.posY + 0.25D + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                    double c1 = this.posZ + (double)(this.rand.nextFloat() - this.rand.nextFloat()) * 0.125D;
-                    Minecraft.getMinecraft().effectRenderer.addEffect(new EntitySlimeFX(this.worldObj, a, b1, c1, item13));
+                    double a = this.x + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                    double b1 = this.y + 0.25D + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                    double c1 = this.z + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;
+                    Minecraft.getMinecraft(this).effectRenderer.addEffect(new EntitySlimeFX(this.world, a, b1, c1, item13));
                 }
 
-                this.isDead = true;
+                this.removed = true;
                 if(e != null && e instanceof EntityPlayer) {
                     this.killedByPlayer = e;
                 }
 
                 if(this.gunPowdered) {
-                    this.worldObj.createExplosion((Entity)null, this.posX, this.posY, this.posZ, 1.0F);
+                    this.world.createExplosion((Entity)null, this.x, this.y, this.z, 1.0F);
                 }
             }
 
@@ -1580,12 +1604,11 @@ public class EntityClayMan extends EntityAnimal {
         }
     }
 
-    @Override
-    public void addVelocity(double d, double d1, double d2) {
+    public void push(double d, double d1, double d2) {
         if(this.gooTime <= 0) {
-            this.motionX += d;
-            this.motionY += d1;
-            this.motionZ += d2;
+            this.xd += d;
+            this.yd += d1;
+            this.zd += d2;
         }
     }
 
@@ -1597,22 +1620,22 @@ public class EntityClayMan extends EntityAnimal {
                 EntityClayMan ec = (EntityClayMan)entity;
                 if((!ec.heavyCore || !this.heavyCore) && (ec.heavyCore || this.heavyCore)) {
                     if(!ec.heavyCore && this.heavyCore) {
-                        this.motionX *= 0.2D;
-                        this.motionY *= 0.4D;
-                        this.motionZ *= 0.2D;
+                        this.xd *= 0.2D;
+                        this.yd *= 0.4D;
+                        this.zd *= 0.2D;
                     } else {
-                        this.motionX *= 1.5D;
-                        this.motionZ *= 1.5D;
+                        this.xd *= 1.5D;
+                        this.zd *= 1.5D;
                     }
                 } else {
-                    this.motionX *= 0.6D;
-                    this.motionY *= 0.75D;
-                    this.motionZ *= 0.6D;
+                    this.xd *= 0.6D;
+                    this.yd *= 0.75D;
+                    this.zd *= 0.6D;
                 }
             } else if(entity != null && entity instanceof EntityGravelChunk) {
-                this.motionX *= 0.6D;
-                this.motionY *= 0.75D;
-                this.motionZ *= 0.6D;
+                this.xd *= 0.6D;
+                this.yd *= 0.75D;
+                this.zd *= 0.6D;
             }
 
         }

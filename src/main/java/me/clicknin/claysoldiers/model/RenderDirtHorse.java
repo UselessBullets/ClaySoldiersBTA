@@ -1,23 +1,25 @@
 package me.clicknin.claysoldiers.model;
 
-import net.minecraft.src.EntityLiving;
-import net.minecraft.src.ModelBiped;
-import net.minecraft.src.RenderBiped;
+import me.clicknin.claysoldiers.entities.EntityClayMan;
+import me.clicknin.claysoldiers.entities.EntityDirtHorse;
+import net.minecraft.client.render.entity.LivingRenderer;
+import net.minecraft.client.render.model.ModelBiped;
+import net.minecraft.core.entity.EntityLiving;
 import org.lwjgl.opengl.GL11;
 
-public class RenderDirtHorse extends RenderBiped {
+public class RenderDirtHorse extends LivingRenderer<EntityDirtHorse> {
     public RenderDirtHorse(ModelBiped model, float f) {
         super(model, f);
     }
 
     @Override
-    protected void preRenderCallback(EntityLiving entityliving, float f) {
+    protected void preRenderCallback(EntityDirtHorse entityDirtHorse, float f) {
         GL11.glScalef(0.7F, 0.7F, 0.7F);
     }
 
     @Override
-    public void doRenderLiving(EntityLiving entityliving, double d, double d1, double d2, float f, float f1) {
+    public void doRenderLiving(EntityDirtHorse entityDirtHorse, double d, double d1, double d2, float f, float f1) {
         f1 *= 2.0F;
-        super.doRenderLiving(entityliving, d, d1, d2, f, f1);
+        super.doRenderLiving(entityDirtHorse, d, d1, d2, f, f1);
     }
 }

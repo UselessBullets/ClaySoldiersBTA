@@ -1,10 +1,18 @@
 package me.clicknin.claysoldiers.items;
 
 import me.clicknin.claysoldiers.entities.EntityClayMan;
-import net.minecraft.src.*;
+import net.minecraft.core.block.Block;
+import net.minecraft.core.entity.player.EntityPlayer;
+import net.minecraft.core.item.Item;
+import net.minecraft.core.item.ItemStack;
+import net.minecraft.core.util.helper.Side;
+import net.minecraft.core.world.World;
+
+import java.util.Random;
 
 public class ItemClayMan extends Item {
     public int clayTeam;
+
 
     public ItemClayMan(int i, int j) {
         super(i);
@@ -13,44 +21,24 @@ public class ItemClayMan extends Item {
     }
 
     @Override
-    public boolean onItemUse(ItemStack itemstack, EntityPlayer entityplayer, World world, int i, int j, int k, int l, double heightPlaced) {
-        if(world.getBlockId(i, j, k) != Block.blockSnow.blockID) {
-            if(l == 0) {
-                --j;
-            }
+    public boolean onItemUse(ItemStack itemstack, EntityPlayer entityplayer, World world, int blockX, int blockY, int blockZ, Side side, double xPlaced, double yPlaced) {
+        if (world.getBlockId(blockX, blockY, blockZ) != Block.blockSnow.id) {
+            blockX = side.getOffsetX();
+            blockY = side.getOffsetY();
+            blockZ = side.getOffsetZ();
 
-            if(l == 1) {
-                ++j;
-            }
-
-            if(l == 2) {
-                --k;
-            }
-
-            if(l == 3) {
-                ++k;
-            }
-
-            if(l == 4) {
-                --i;
-            }
-
-            if(l == 5) {
-                ++i;
-            }
-
-            if(!world.isAirBlock(i, j, k)) {
+            if(!world.isAirBlock(blockX, blockY, blockZ)) {
                 return false;
             }
         }
 
         boolean jack = false;
-        int p = world.getBlockId(i, j, k);
-        if(p == 0 || Block.blocksList[p].getCollisionBoundingBoxFromPool(world, i, j, k) == null) {
+        int p = world.getBlockId(blockX, blockY, blockZ);
+        if(p == 0 || Block.blocksList[p].getCollisionBoundingBoxFromPool(world, blockX, blockY, blockZ) == null) {
             while(itemstack.stackSize > 0) {
-                double a = (double)i + 0.25D + (double)entityplayer.rand.nextFloat() * 0.5D;
-                double b = (double)j + 0.5D;
-                double c = (double)k + 0.25D + (double)entityplayer.rand.nextFloat() * 0.5D;
+                double a = (double)blockX + 0.25D + (double)itemRand.nextFloat() * 0.5D;
+                double b = (double)blockY + 0.5D;
+                double c = (double)blockZ + 0.25D + (double)itemRand.nextFloat() * 0.5D;
                 EntityClayMan ec = new EntityClayMan(world, a, b, c, this.clayTeam);
                 world.entityJoinedWorld(ec);
                 jack = true;
