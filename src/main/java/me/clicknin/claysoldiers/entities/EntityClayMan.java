@@ -1,5 +1,6 @@
 package me.clicknin.claysoldiers.entities;
 
+import com.mojang.nbt.CompoundTag;
 import me.clicknin.claysoldiers.ClaySoldiers;
 import me.clicknin.claysoldiers.items.ItemClayMan;
 import net.minecraft.client.Minecraft;
@@ -67,7 +68,7 @@ public class EntityClayMan extends EntityAnimal {
         this.moveSpeed = 0.3F;
         this.setSize(0.15F, 0.4F);
         this.setPos(this.x, this.y, this.z);
-        this.skinName = "penguin";
+        this.skinName = "clayman";
         this.highestSkinVariant = -1;
     }
 
@@ -80,14 +81,14 @@ public class EntityClayMan extends EntityAnimal {
         this.moveSpeed = 0.3F;
         this.setSize(0.15F, 0.4F);
         this.setPos(x, y, z);
-        this.skinName = "penguin";
+        this.skinName = "clayman";
         this.highestSkinVariant = -1;
         this.viewScale = 5.0;
         this.world.playSoundAtEntity(this, "step.gravel", 0.8F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F) * 0.9F);
     }
-    public String getEntityTexture() {return "/assets/penguinmod/entity/penguin/penguin2.png";}
+    public String getEntityTexture() {return clayManTexture(clayTeam);}
     public String getDefaultEntityTexture() {
-        return "/assets/penguinmod/entity/penguin/penguin2.png";
+        return clayManTexture(clayTeam);
     }
 
     public String clayManTexture(int i) {
@@ -492,7 +493,7 @@ public class EntityClayMan extends EntityAnimal {
                                             Minecraft.getMinecraft(this).effectRenderer.addEffect(new EntityDiggingFX(this.world, d24, d30, d36, 0.0D, 0.0D, 0.0D, Block.planksOak, 0, 0));
                                         }
 
-                                        this.world.playSoundAtEntity(this, "randomom.wood click", 0.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
+                                        this.world.playSoundAtEntity(this, "random.wood click", 0.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
                                     }
 
                                     this.targetFollow = null;
@@ -547,7 +548,7 @@ public class EntityClayMan extends EntityAnimal {
                                     }
 
                                     if(b31 > 0) {
-                                        this.world.playSoundAtEntity(this, "randomom.pop", 0.2F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
+                                        this.world.playSoundAtEntity(this, "random.pop", 0.2F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
                                         if(b31 == 1) {
                                             this.logs += 5;
                                             if(entityItem15.item != null) {
@@ -834,7 +835,7 @@ public class EntityClayMan extends EntityAnimal {
                                 }
 
                                 if(arrived && b19 > 0) {
-                                    this.world.playSoundAtEntity(this, "randomom.pop", 0.2F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
+                                    this.world.playSoundAtEntity(this, "random.pop", 0.2F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
                                     if(b19 == 1) {
                                         this.logs += 5;
                                         chest.decrStackSize(q, 5);
@@ -859,7 +860,7 @@ public class EntityClayMan extends EntityAnimal {
                                         Minecraft.getMinecraft(this).effectRenderer.addEffect(new EntityDiggingFX(this.world, d22, a1, b1, 0.0D, 0.0D, 0.0D, Block.planksOak, 0, 0));
                                     }
 
-                                    this.world.playSoundAtEntity(this, "randomom.wood click", 0.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
+                                    this.world.playSoundAtEntity(this, "random.wood click", 0.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
                                 }
 
                                 return true;
@@ -1183,7 +1184,7 @@ public class EntityClayMan extends EntityAnimal {
             }
         }
 
-        this.world.playSoundAtEntity(this, "randomom.wood click", 1.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
+        this.world.playSoundAtEntity(this, "random.wood click", 1.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
         this.world.playSoundAtEntity(this, "step.wood", 1.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
         this.logs -= 20;
     }
@@ -1255,7 +1256,7 @@ public class EntityClayMan extends EntityAnimal {
     }
 
     public void gotcha(EntityItem item) {
-        this.world.playSoundAtEntity(item, "randomom.pop", 0.2F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
+        this.world.playSoundAtEntity(item, "random.pop", 0.2F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
         if(item.item != null) {
             --item.item.stackSize;
             if(item.item.stackSize <= 0) {
@@ -1270,40 +1271,38 @@ public class EntityClayMan extends EntityAnimal {
     }
 
     public void gotcha(TileEntityChest chest, int q) {
-        this.world.playSoundAtEntity(this, "randomom.pop", 0.2F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
+        this.world.playSoundAtEntity(this, "random.pop", 0.2F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F) * 2.0F);
         chest.decrStackSize(q, 1);
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound nbttagcompound) {
-        super.writeToNBT(nbttagcompound);
-        nbttagcompound.setShort("ClayTeam", (short)this.clayTeam);
-        nbttagcompound.setShort("WeaponPoints", (short)this.weaponPoints);
-        nbttagcompound.setShort("ArmorPoints", (short)this.armorPoints);
-        nbttagcompound.setShort("FoodLeft", (short)this.foodLeft);
-        nbttagcompound.setShort("SugarTime", (short)this.sugarTime);
-        nbttagcompound.setShort("ResPoints", (short)this.resPoints);
-        nbttagcompound.setShort("StrikeTime", (short)this.strikeTime);
-        nbttagcompound.setShort("ClimbTime", (short)this.climbTime);
-        nbttagcompound.setShort("GooTime", (short)this.gooTime);
-        nbttagcompound.setShort("SmokeTime", (short)this.smokeTime);
-        nbttagcompound.setShort("GooStock", (short)this.gooStock);
-        nbttagcompound.setShort("SmokeStock", (short)this.smokeStock);
-        nbttagcompound.setShort("Logs", (short)this.logs);
-        nbttagcompound.setShort("Rocks", (short)this.rocks);
-        nbttagcompound.setBoolean("Gunpowdered", this.gunPowdered);
-        nbttagcompound.setBoolean("King", this.king);
-        nbttagcompound.setBoolean("Glowing", this.glowing);
-        nbttagcompound.setBoolean("StickSharp", this.stickSharp);
-        nbttagcompound.setBoolean("ArmorPadded", this.armorPadded);
-        nbttagcompound.setBoolean("HeavyCore", this.heavyCore);
+    public void addAdditionalSaveData(CompoundTag nbttagcompound) {
+        super.addAdditionalSaveData(nbttagcompound);
+        nbttagcompound.putShort("ClayTeam", (short)this.clayTeam);
+        nbttagcompound.putShort("WeaponPoints", (short)this.weaponPoints);
+        nbttagcompound.putShort("ArmorPoints", (short)this.armorPoints);
+        nbttagcompound.putShort("FoodLeft", (short)this.foodLeft);
+        nbttagcompound.putShort("SugarTime", (short)this.sugarTime);
+        nbttagcompound.putShort("ResPoints", (short)this.resPoints);
+        nbttagcompound.putShort("StrikeTime", (short)this.strikeTime);
+        nbttagcompound.putShort("ClimbTime", (short)this.climbTime);
+        nbttagcompound.putShort("GooTime", (short)this.gooTime);
+        nbttagcompound.putShort("SmokeTime", (short)this.smokeTime);
+        nbttagcompound.putShort("GooStock", (short)this.gooStock);
+        nbttagcompound.putShort("SmokeStock", (short)this.smokeStock);
+        nbttagcompound.putShort("Logs", (short)this.logs);
+        nbttagcompound.putShort("Rocks", (short)this.rocks);
+        nbttagcompound.putBoolean("Gunpowdered", this.gunPowdered);
+        nbttagcompound.putBoolean("King", this.king);
+        nbttagcompound.putBoolean("Glowing", this.glowing);
+        nbttagcompound.putBoolean("StickSharp", this.stickSharp);
+        nbttagcompound.putBoolean("ArmorPadded", this.armorPadded);
+        nbttagcompound.putBoolean("HeavyCore", this.heavyCore);
     }
-
     @Override
-    public void readFromNBT(NBTTagCompound nbttagcompound) {
-        super.readFromNBT(nbttagcompound);
+    public void readAdditionalSaveData(CompoundTag nbttagcompound) {
+        super.readAdditionalSaveData(nbttagcompound);
         this.clayTeam = nbttagcompound.getShort("ClayTeam");
-        this.texture = this.clayManTexture(this.clayTeam);
         this.weaponPoints = nbttagcompound.getShort("WeaponPoints");
         this.armorPoints = nbttagcompound.getShort("ArmorPoints");
         this.foodLeft = nbttagcompound.getShort("FoodLeft");
@@ -1327,14 +1326,14 @@ public class EntityClayMan extends EntityAnimal {
 
     @Override
     protected String getHurtSound() {
-        this.world.playSoundAtEntity(this, "randomom.hurt", 0.6F, 1.0F * (this.random.nextFloat() * 0.2F + 1.6F));
+        this.world.playSoundAtEntity(this, "random.hurt", 0.6F, 1.0F * (this.random.nextFloat() * 0.2F + 1.6F));
         this.world.playSoundAtEntity(this, "step.gravel", 0.6F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
         return "";
     }
 
     @Override
     protected String getDeathSound() {
-        this.world.playSoundAtEntity(this, "randomom.hurt", 0.6F, 1.0F * (this.random.nextFloat() * 0.2F + 1.6F));
+        this.world.playSoundAtEntity(this, "random.hurt", 0.6F, 1.0F * (this.random.nextFloat() * 0.2F + 1.6F));
         return "step.gravel";
     }
 
@@ -1489,7 +1488,7 @@ public class EntityClayMan extends EntityAnimal {
     }
 
 
-    public boolean attackEntityFrom(Entity e, int i, DamageType type) {
+    public boolean hurt(Entity e, int i, DamageType type) {
         if(this.vehicle != null && i < 100 && this.random.nextInt(2) == 0) {
             return this.vehicle.hurt(e, i, (DamageType)null);
         } else {
@@ -1545,7 +1544,7 @@ public class EntityClayMan extends EntityAnimal {
                     } else if(fred.smokeStock > 0 && this.smokeTime <= 0) {
                         --fred.smokeStock;
                         this.smokeTime = 100;
-                        this.world.playSoundAtEntity(this, "randomom.fizz", 0.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
+                        this.world.playSoundAtEntity(this, "random.fizz", 0.75F, 1.0F / (this.random.nextFloat() * 0.2F + 0.9F));
 
                         for(item1 = 0; item1 < 8; ++item1) {
                             q = this.x + (double)(this.random.nextFloat() - this.random.nextFloat()) * 0.125D;

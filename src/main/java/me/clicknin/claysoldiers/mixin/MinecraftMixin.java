@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MinecraftMixin {
     @Shadow
     private static Minecraft theMinecraft;
-    @Inject(method = "getMinecraft(Ljava/lang/Class;)Lnet/minecraft/client/Minecraft;", at = @At("HEAD"))
+    @Inject(method = "getMinecraft(Ljava/lang/Class;)Lnet/minecraft/client/Minecraft;", at = @At("HEAD"), cancellable = true)
     private static void getMinecraft(Class<?> caller, CallbackInfoReturnable<Minecraft> cir){
         cir.setReturnValue(theMinecraft);
     }

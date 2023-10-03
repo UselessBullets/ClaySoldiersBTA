@@ -41,9 +41,9 @@ public class ItemClayDisruptor extends Item {
             for(x = 0; x < list1.size(); ++x) {
                 Entity y = (Entity)list1.get(x);
                 if(y instanceof EntityClayMan && y.isAlive() && ((EntityLiving)y).health > 0) {
-                    ((EntityClayMan) y).attackEntityFrom(entityplayer, 100, null);
+                    ((EntityClayMan) y).hurt(entityplayer, 100, null);
                 } else if(y instanceof EntityDirtHorse && y.isAlive() && ((EntityLiving)y).health > 0) {
-                    ((EntityDirtHorse) y).attackEntityFrom(entityplayer, 100, null);
+                    ((EntityDirtHorse) y).hurt(entityplayer, 100, null);
                 }
             }
 

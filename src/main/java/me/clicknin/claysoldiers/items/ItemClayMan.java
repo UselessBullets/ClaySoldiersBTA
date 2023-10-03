@@ -23,9 +23,9 @@ public class ItemClayMan extends Item {
     @Override
     public boolean onItemUse(ItemStack itemstack, EntityPlayer entityplayer, World world, int blockX, int blockY, int blockZ, Side side, double xPlaced, double yPlaced) {
         if (world.getBlockId(blockX, blockY, blockZ) != Block.blockSnow.id) {
-            blockX = side.getOffsetX();
-            blockY = side.getOffsetY();
-            blockZ = side.getOffsetZ();
+            blockX += side.getOffsetX();
+            blockY += side.getOffsetY();
+            blockZ += side.getOffsetZ();
 
             if(!world.isAirBlock(blockX, blockY, blockZ)) {
                 return false;

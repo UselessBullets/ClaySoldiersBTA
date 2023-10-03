@@ -26,15 +26,15 @@ public class ClaySoldiers implements ModInitializer {
 
     public static int waveTime;
 
-    public static final Item greyDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(2000, 0), "grey_soldier", "doll_grey.png");
-    public static final Item redDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(2001, 1), "red_soldier", "doll_red.png");
-    public static final Item yellowDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(2002, 2), "yellow_soldier", "doll_yellow.png");
-    public static final Item greenDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(2003, 3), "green_soldier", "doll_green.png");
-    public static final Item blueDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(2004, 4), "blue_soldier", "doll_blue.png");
-    public static final Item orangeDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(2005, 5), "orange_soldier", "doll_orange.png");
-    public static final Item purpleDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(2006, 6), "purple_soldier", "doll_purple.png");
-    public static final Item dirtHorse = ItemHelper.createItem(MOD_ID, new ItemDirtHorse(2007), "dirt_horse", "doll_horse.png");
-    public static final Item clayDisruptor = ItemHelper.createItem(MOD_ID, new ItemClayDisruptor(2008), "clay_disruptor", "disruptor.png");
+    public static final Item greyDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(20000, 0), "grey_soldier", "doll_grey.png");
+    public static final Item redDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(20001, 1), "red_soldier", "doll_red.png");
+    public static final Item yellowDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(20002, 2), "yellow_soldier", "doll_yellow.png");
+    public static final Item greenDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(20003, 3), "green_soldier", "doll_green.png");
+    public static final Item blueDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(20004, 4), "blue_soldier", "doll_blue.png");
+    public static final Item orangeDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(20005, 5), "orange_soldier", "doll_orange.png");
+    public static final Item purpleDoll = ItemHelper.createItem(MOD_ID, new ItemClayMan(20006, 6), "purple_soldier", "doll_purple.png");
+    public static final Item dirtHorse = ItemHelper.createItem(MOD_ID, new ItemDirtHorse(20007), "dirt_horse", "doll_horse.png");
+    public static final Item clayDisruptor = ItemHelper.createItem(MOD_ID, new ItemClayDisruptor(20008), "clay_disruptor", "disruptor.png");
 
     @Override
     public void onInitialize() {
