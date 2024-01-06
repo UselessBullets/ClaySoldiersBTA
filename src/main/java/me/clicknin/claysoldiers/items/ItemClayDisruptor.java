@@ -90,7 +90,7 @@ public class ItemClayDisruptor extends Item {
         int b = world.getBlockMetadata(x, y, z);
         if(a != 0) {
             Minecraft.getMinecraft(this).effectRenderer.addBlockDestroyEffects(x, y, z, a, b);
-            Block.blocksList[a].onBlockRemoval(world, x, y, z);
+            Block.blocksList[a].onBlockRemoved(world, x, y, z, world.getBlockMetadata(x,y,z));
             Block.blocksList[a].dropBlockWithCause(world, EnumDropCause.WORLD,x, y, z, b, null);
             world.setBlockWithNotify(x, y, z, 0);
         }

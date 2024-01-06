@@ -41,9 +41,9 @@ public class ClaySoldiers implements ModInitializer {
         EntityHelper.createEntity(EntityClayMan.class, new RenderClayMan(new ModelClayMan(0.0F, 13.0F), 0.125F), 200, "ClaySoldier");
         EntityHelper.createEntity(EntityDirtHorse.class, new RenderDirtHorse(new ModelDirtHorse(0.0F, 12.75F), 0.15F), 201, "DirtHorse");
 
-        RecipeHelper.Crafting.createRecipe(greyDoll, 4, new Object[]{"$", "#", '$', Block.sand, '#', Block.blockClay});
-        RecipeHelper.Crafting.createRecipe(dirtHorse, 4, new Object[]{"#$#", "# #", '$', Block.sand, '#', Block.dirt});
-        RecipeHelper.Crafting.createRecipe(clayDisruptor, 4, new Object[]{"#$#", "#@#", '$', Item.stick, '#', Block.blockClay, '@', Item.dustRedstone});
+        RecipeHelper.Crafting.createRecipe(new ItemStack(greyDoll, 4), new Object[]{"$", "#", '$', Block.sand, '#', Block.blockClay});
+        RecipeHelper.Crafting.createRecipe(new ItemStack(dirtHorse, 4), new Object[]{"#$#", "# #", '$', Block.sand, '#', Block.dirt});
+        RecipeHelper.Crafting.createRecipe(new ItemStack(clayDisruptor, 4), new Object[]{"#$#", "#@#", '$', Item.stick, '#', Block.blockClay, '@', Item.dustRedstone});
 
         RecipeHelper.Crafting.createShapelessRecipe(redDoll, 1, new Object[]{new ItemStack(greyDoll, 1), new ItemStack(Item.dye, 1, 1)});
         RecipeHelper.Crafting.createShapelessRecipe(yellowDoll, 1, new Object[]{new ItemStack(greyDoll, 1), new ItemStack(Item.dye, 1, 11)});

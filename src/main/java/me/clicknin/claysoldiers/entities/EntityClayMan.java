@@ -4,6 +4,8 @@ import com.mojang.nbt.CompoundTag;
 import me.clicknin.claysoldiers.ClaySoldiers;
 import me.clicknin.claysoldiers.items.ItemClayMan;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.fx.EntityDiggingFX;
+import net.minecraft.client.entity.fx.EntitySlimeFX;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.block.entity.TileEntityChest;
@@ -13,8 +15,6 @@ import net.minecraft.core.entity.EntityBobber;
 import net.minecraft.core.entity.EntityItem;
 import net.minecraft.core.entity.EntityLiving;
 import net.minecraft.core.entity.animal.EntityAnimal;
-import net.minecraft.core.entity.fx.EntityDiggingFX;
-import net.minecraft.core.entity.fx.EntitySlimeFX;
 import net.minecraft.core.entity.monster.EntityMonster;
 import net.minecraft.core.entity.player.EntityPlayer;
 import net.minecraft.core.item.Item;
@@ -69,7 +69,6 @@ public class EntityClayMan extends EntityAnimal {
         this.setSize(0.15F, 0.4F);
         this.setPos(this.x, this.y, this.z);
         this.skinName = "clayman";
-        this.highestSkinVariant = -1;
     }
 
     public EntityClayMan(World world, double x, double y, double z, int i) {
@@ -82,7 +81,6 @@ public class EntityClayMan extends EntityAnimal {
         this.setSize(0.15F, 0.4F);
         this.setPos(x, y, z);
         this.skinName = "clayman";
-        this.highestSkinVariant = -1;
         this.viewScale = 5.0;
         this.world.playSoundAtEntity(this, "step.gravel", 0.8F, ((this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F) * 0.9F);
     }
@@ -1490,7 +1488,10 @@ public class EntityClayMan extends EntityAnimal {
 
     public boolean hurt(Entity e, int i, DamageType type) {
         if(this.vehicle != null && i < 100 && this.random.nextInt(2) == 0) {
-            return this.vehicle.hurt(e, i, (DamageType)null);
+            if (vehicle instanceof Entity) {
+                return ((Entity) this.vehicle).hurt(e, i, (DamageType) null);
+            }
+            return false;
         } else {
             if(e != null && e instanceof EntityClayMan) {
                 EntityClayMan fred = (EntityClayMan)e;

@@ -18,8 +18,8 @@ public class RenderDirtHorse extends LivingRenderer<EntityDirtHorse> {
     }
 
     @Override
-    public void doRenderLiving(EntityDirtHorse entityDirtHorse, double d, double d1, double d2, float f, float f1) {
+    public void doRender(EntityDirtHorse entityDirtHorse, double d, double d1, double d2, float f, float f1) {
         f1 *= 2.0F;
-        super.doRenderLiving(entityDirtHorse, d, d1, d2, f, f1);
+        super.doRender(entityDirtHorse, d, d1, d2, f, f1);
     }
 }

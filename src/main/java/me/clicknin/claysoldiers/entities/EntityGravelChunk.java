@@ -2,15 +2,14 @@ package me.clicknin.claysoldiers.entities;
 
 import com.mojang.nbt.CompoundTag;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.fx.EntityDiggingFX;
 import net.minecraft.core.HitResult;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.EntityLiving;
-import net.minecraft.core.entity.fx.EntityDiggingFX;
 import net.minecraft.core.entity.player.EntityPlayer;
 import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
-import net.minecraft.core.util.helper.DamageType;
 import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.util.phys.Vec3d;
